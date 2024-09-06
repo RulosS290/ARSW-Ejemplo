@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <title>To-Do List</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <h1>To-Do List</h1>
+  <form id="task-form">
+    <input type="hidden" id="task-id">
+    <input type="text" id="task-name" placeholder="Task Name" required>
+    <label for="completed">
+      <input type="checkbox" id="task-completed"> Completed
+    </label>
+    <button type="submit">Add Task</button>
+  </form>
+  <table id="tasks-table">
+    <thead>
+      <tr>
+        <th id="table-text">Name</th>
+        <th id="table-text">Completed</th>
+        <th id="table-text">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Las tareas se insertarán aquí -->
+    </tbody>
+  </table>
+
+  <script>
+    async function fetchTasks() {
+      try {
+        const response = await fetch('/tasks');
+        const tasks = await response.json();
+        const tableBody = document.querySelector('#tasks-table tbody');
+        tableBody.innerHTML = '';
+
+        tasks.forEach(task => {
+          const row = document.createElement('tr');
+          const nameCell = document.createElement('td');
+          nameCell.textContent = task.name;
+          const completedCell = document.createElement('td');
+          completedCell.textContent = task.completed ? 'Yes' : 'No';
+          const actionsCell = document.createElement('td');
+
+          const editButton = document.createElement('button');
+          editButton.textContent = 'Edit';
+          editButton.addEventListener('click', () => editTask(task));
+
+          const deleteButton = document.createElement('button');
+          deleteButton.textContent = 'Delete';
+          deleteButton.addEventListener('click', () => deleteTask(task._id));
+
+          actionsCell.appendChild(editButton);
+          actionsCell.appendChild(deleteButton);
+
+          row.appendChild(nameCell);
+          row.appendChild(completedCell);
+          row.appendChild(actionsCell);
+          tableBody.appendChild(row);
+        });
+      } catch (err) {
+        console.error('Error fetching tasks:', err);
+      }
+    }
+
+    async function addTask(name, completed) {
+      const taskId = document.getElementById('task-id').value;
+      const method = taskId ? 'PUT' : 'POST'; // Usar PUT para actualizar, POST para agregar
+      const url = taskId ? `/tasks/${taskId}` : '/tasks';
+
+      try {
+        const response = await fetch(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, completed })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          fetchTasks(); // Recargar tareas después de agregar/actualizar
+          document.getElementById('task-form').reset();
+          document.querySelector('button[type="submit"]').textContent = 'Add Task';
+        }
+      } catch (err) {
+        console.error('Error adding/updating task:', err);
+      }
+    }
+
+    function editTask(task) {
+      document.getElementById('task-id').value = task._id;
+      document.getElementById('task-name').value = task.name;
+      document.getElementById('task-completed').checked = task.completed;
+      document.querySelector('button[type="submit"]').textContent = 'Update Task';
+    }
+
+    async function deleteTask(taskId) {
+      try {
+        const response = await fetch(`/tasks/${taskId}`, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          fetchTasks(); // Recargar tareas después de eliminar
+        }
+      } catch (err) {
+        console.error('Error deleting task:', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchTasks);
+
+    document.getElementById('task-form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const name = document.getElementById('task-name').value;
+      const completed = document.getElementById('task-completed').checked;
+      addTask(name, completed);
+    });
+  </script>
+</body>
+</html>
