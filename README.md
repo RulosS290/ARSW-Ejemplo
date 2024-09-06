@@ -1,6 +1,6 @@
 # ARSW - Ejemplo Práctico mongoDB Atlas
 
-## Requistios
+## Requisitos
 
 * Node.js
 
