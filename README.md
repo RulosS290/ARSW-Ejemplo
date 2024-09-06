@@ -9,7 +9,7 @@
 
 1. 
 ```bash
-git clone https://github.com/RulosS290/AREP-Taller3.git
+git clone https://github.com/RulosS290/ARSW-Ejemplo.git
 ```
 
 2.
